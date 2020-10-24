@@ -714,31 +714,8 @@ func (dc *Context) drawString(im *image.RGBA, s string, x, y float64) {
 		Face: dc.fontFace,
 		Dot:  fixp(x, y),
 	}
-	// based on Drawer.DrawString() in golang.org/x/image/font/font.go
-	prevC := rune(-1)
-	for _, c := range s {
-		if prevC >= 0 {
-			d.Dot.X += d.Face.Kern(prevC, c)
-		}
-		dr, mask, maskp, advance, ok := d.Face.Glyph(d.Dot, c)
-		if !ok {
-			// TODO: is falling back on the U+FFFD glyph the responsibility of
-			// the Drawer or the Face?
-			// TODO: set prevC = '\ufffd'?
-			continue
-		}
-		sr := dr.Sub(dr.Min)
-		transformer := draw.BiLinear
-		fx, fy := float64(dr.Min.X), float64(dr.Min.Y)
-		m := dc.matrix.Translate(fx, fy)
-		s2d := f64.Aff3{m.XX, m.XY, m.X0, m.YX, m.YY, m.Y0}
-		transformer.Transform(d.Dst, s2d, d.Src, sr, draw.Over, &draw.Options{
-			SrcMask:  mask,
-			SrcMaskP: maskp,
-		})
-		d.Dot.X += advance
-		prevC = c
-	}
+	d.DrawString(s)
+	return
 }
 
 // DrawString draws the specified text at the specified point.
